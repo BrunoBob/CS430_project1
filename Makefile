@@ -1,5 +1,5 @@
 COMPIL = gcc
-FLAG = -Wall
+FLAG = -Wno-unused-result
 NAME = ppmrw
 
 all: $(NAME)

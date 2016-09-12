@@ -8,6 +8,7 @@
 * 2 = Wrong type of conversion
 * 3 = Error opening file : file dont exist
 * 4 = Format not ppm P3 or ppm P6
+* 5 = File corrupted : Can't read image size
 */
 
 int main(int argc, char *argv[]){
@@ -38,6 +39,10 @@ int main(int argc, char *argv[]){
     fprintf(stderr, "Error : Wrong input file format, expect ppm file in format P3 or P6 \n");
     return 4;
   }
+  if((inputImage->width == 0) || (inputImage->height == 0)){
+    fprintf(stderr, "Error : Can't read image size \n");
+    return 5;
+  }
 
   //Close input and output files
   closeImage(inputImage);
@@ -59,6 +64,7 @@ ppmImage openImage(ppmImage image, char* name){
     image = (ppmImage) malloc(sizeof(*image));
     image->name = name;
     image->type = 0;
+    image->width = image->height = 0;
 
     //Opening file
     image->file = fopen(name, "r");
@@ -76,6 +82,52 @@ ppmImage openImage(ppmImage image, char* name){
     else if(!strcmp(buffer, "P6")){
       image->type = 6;
     }
+    free(buffer);
+
+    //Reading comment
+    buffer = (char*)malloc(sizeof(char));
+    fread(buffer, sizeof(char), 1, image->file); //read end of line car
+    fread(buffer, sizeof(char), 1, image->file); //Read first car to see if comment
+    while((buffer != NULL) && (!strcmp(buffer, "#"))){
+      while(strcmp(buffer, "\n")){
+        fread(buffer, sizeof(char), 1, image->file);
+      }
+      fread(buffer, sizeof(char), 1, image->file);
+    }
+
+    //Get image size
+    int numberSize = 1;
+    char* number = (char*)malloc(sizeof(char)*numberSize);
+    number[numberSize-1] = buffer[0];
+    while((fread(buffer, sizeof(char), 1, image->file)) && (strcmp(buffer, " "))){
+      if(buffer != NULL){
+        numberSize++;
+        realloc(number,sizeof(char)*numberSize);
+        number[numberSize-1] = buffer[0];
+      }
+    }
+    image->width = atoi(number);
+
+    free(number);
+    number = (char*)malloc(sizeof(char)*numberSize);
+    numberSize = 0;
+    while((fread(buffer, sizeof(char), 1, image->file)) && (strcmp(buffer, "\n"))){
+      if(buffer != NULL){
+        numberSize++;
+        realloc(number,sizeof(char)*numberSize);
+        number[numberSize-1] = buffer[0];
+      }
+    }
+    image->height = atoi(number);
+    free(number);
+    printf("%d  %d\n", image->width,image->height);
+
+    //Reading max color value
+    do{
+      fread(buffer, sizeof(char), 1, image->file);
+    }while(strcmp(buffer, "\n"));
+
+    free(buffer)
     return image;
 }
 
