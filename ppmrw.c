@@ -12,7 +12,7 @@
 */
 
 int main(int argc, char *argv[]){
-  char conversionType;  // 0 = convert to P6 | 1 = convert to P3
+  char conversionType;  // 3 = convert to P3 | 6 = convert to P6
 
   ppmImage inputImage = NULL;
   ppmImage outputImage = NULL;
@@ -30,7 +30,7 @@ int main(int argc, char *argv[]){
   }
 
   //Open input file
-  inputImage = openImage(inputImage,argv[2]);
+  inputImage = openImage(argv[2]);
   if(inputImage == NULL){
     fprintf(stderr, "Error : Cannot open file %s\n", argv[2]);
     return 3;
@@ -44,24 +44,28 @@ int main(int argc, char *argv[]){
     return 5;
   }
 
+  //Convert image
+  outputImage = convertImage(inputImage, argv[3], conversionType);
+
   //Close input and output files
   closeImage(inputImage);
+  closeImage(outputImage);
 
   return 0;
 }
 
 char getConversionType(char* arg){
   if(!strcmp(arg, "3")){
-    return 0;
+    return 3;
   }
   else if(!strcmp(arg, "6")){
-    return 1;
+    return 6;
   }
   return -1;
 }
 
-ppmImage openImage(ppmImage image, char* name){
-    image = (ppmImage) malloc(sizeof(*image));
+ppmImage openImage(char* name){
+    ppmImage image = (ppmImage) malloc(sizeof(*image));
     image->name = name;
     image->type = 0;
     image->width = image->height = 0;
@@ -107,10 +111,10 @@ ppmImage openImage(ppmImage image, char* name){
       }
     }
     image->width = atoi(number);
-
     free(number);
-    number = (char*)malloc(sizeof(char)*numberSize);
+
     numberSize = 0;
+    number = (char*)malloc(sizeof(char)*numberSize);
     while((fread(buffer, sizeof(char), 1, image->file)) && (strcmp(buffer, "\n"))){
       if(buffer != NULL){
         numberSize++;
@@ -120,15 +124,32 @@ ppmImage openImage(ppmImage image, char* name){
     }
     image->height = atoi(number);
     free(number);
-    printf("%d  %d\n", image->width,image->height);
 
     //Reading max color value
     do{
       fread(buffer, sizeof(char), 1, image->file);
     }while(strcmp(buffer, "\n"));
 
-    free(buffer)
+    free(buffer);
     return image;
+}
+
+ppmImage convertImage(ppmImage inputImage, char* outputName, char conversionType){
+  //init output image data
+  ppmImage outputImage = (ppmImage) malloc(sizeof(*outputImage));
+  outputImage->name = outputName;
+  outputImage->type = conversionType;
+  outputImage->width = inputImage->width;
+  outputImage->height = outputImage->height;
+
+  //opening output file
+  outputImage->file = fopen(outputName, "w");
+  if(outputImage->file == NULL){
+    free(outputImage);
+    return NULL;
+  }
+
+  return outputImage;
 }
 
 void closeImage(ppmImage image){

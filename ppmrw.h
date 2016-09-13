@@ -11,5 +11,6 @@ typedef struct{
 
 
 char getConversionType(char* arg);
-ppmImage openImage(ppmImage image, char* name);
+ppmImage openImage(char* name);
+ppmImage convertImage(ppmImage inputImage, char* outputName, char conversionType);
 void closeImage(ppmImage image);
