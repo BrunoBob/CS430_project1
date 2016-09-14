@@ -109,7 +109,7 @@ ppmImage openImage(char* name){
   while((fread(buffer, sizeof(char), 1, image->file)) && (strcmp(buffer, " "))){
     if(buffer != NULL){
       numberSize++;
-      realloc(number,sizeof(char)*numberSize);
+      number = realloc(number,sizeof(char)*numberSize);
       number[numberSize-1] = buffer[0];
     }
   }
@@ -121,7 +121,7 @@ ppmImage openImage(char* name){
   while((fread(buffer, sizeof(char), 1, image->file)) && (strcmp(buffer, "\n"))){
     if(buffer != NULL){
       numberSize++;
-      realloc(number,sizeof(char)*numberSize);
+      number = realloc(number,sizeof(char)*numberSize);
       number[numberSize-1] = buffer[0];
     }
   }
@@ -167,7 +167,7 @@ ppmImage convertImage(ppmImage inputImage, char* outputName, char conversionType
   do{
     //Read data
     if(inputImage->type == 3){
-      buffer = fgets(buffer, 5, inputImage->file);
+      buffer = (unsigned char*)fgets((char*)buffer, 5, inputImage->file);
     }
     else{
       read = fread(buffer, sizeof(char), 1, inputImage->file);
@@ -188,8 +188,8 @@ ppmImage convertImage(ppmImage inputImage, char* outputName, char conversionType
       else{
         //P3 to P6
         if(inputImage->type == 3){
-          unsigned char *data = (char*)malloc(sizeof(char));
-          data[0] = (unsigned char) atoi(buffer);
+          unsigned char *data = (unsigned char*)malloc(sizeof(char));
+          data[0] = (unsigned char) atoi((char*)buffer);
           fwrite(data, sizeof(char), 1, outputImage->file);
           free(data);
         }
